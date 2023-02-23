@@ -34,6 +34,7 @@ class Bot(commands.Bot):
             'jishaku',
             'extensions.server',
             'extensions.admin',
+            'extensions.logger',
         )
         for ext in extensions:
             await self.load_extension(ext)
