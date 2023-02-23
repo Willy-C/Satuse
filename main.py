@@ -58,7 +58,8 @@ class Bot(commands.Bot):
                           color=discord.Color.red())
         e.set_author(name=ctx.author, icon_url=ctx.author.display_avatar.url)
 
-        owner = self.get_user(OWNER_ID)
+        app_info = await self.application_info()
+        owner = app_info.owner
         await owner.send(embed=e)
         fmt = "".join(tb)
         if len(fmt) >= 1980:
