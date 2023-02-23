@@ -7,7 +7,7 @@ from typing import Optional
 import discord
 from discord.ext import commands
 
-from config import BOT_TOKEN, OWNER_ID, WHITELIST
+from config import BOT_TOKEN, WHITELIST, PREFIX
 
 
 class Bot(commands.Bot):
@@ -18,7 +18,7 @@ class Bot(commands.Bot):
             messages=True,
             message_content=True,
         )
-        super().__init__(command_prefix='hey server ',
+        super().__init__(command_prefix=PREFIX,
                          intents=intents,
                          description='Hello, I am a bot that helps start the server',
                          allowed_mentions=discord.AllowedMentions.none(),
