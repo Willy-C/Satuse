@@ -68,12 +68,15 @@ class Bot(commands.Bot):
         else:
             await owner.send(f'```py\n{fmt}```')
 
-    async def process_commands(self, message: discord.Message):
+    async def on_message(self, message: discord.Message):
         if message.author.id not in WHITELIST:
             return
 
-        ctx = await self.get_context(message)
-        await self.invoke(ctx)
+        if message.content in ('<@1078131779543765052>', '<@!1078131779543765052>'):
+            await message.reply('To start the server: `uwu pls start`', mention_author=False)
+            return
+
+        await self.process_commands(message)
 
 
 bot = Bot()
