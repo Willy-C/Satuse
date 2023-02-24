@@ -9,7 +9,7 @@ import psutil
 import discord
 from discord.ext import commands, tasks
 
-from config import SERVER_CWD
+from config import SERVER_CWD, OWNER_ID
 
 if TYPE_CHECKING:
     from main import Bot
@@ -38,6 +38,32 @@ class Server(commands.Cog):
             await ctx.reply(f'The server was last started at {discord.utils.format_dt(dt)} ({discord.utils.format_dt(dt, "R")})\n'
                             f'If it has been more than a few minutes and the server is still down, please message me!')
             return
+
+        _confirm = 'uwu yes pls'
+
+        def confirm_check(msg: discord.Message):
+            if msg.author.id != ctx.author.id or msg.channel.id != ctx.channel.id:
+                return False
+
+            if ctx.author.id == OWNER_ID:
+                return msg.content.lower() in (_confirm, 'confirm')
+            else:
+                return msg.content.lower() == _confirm
+
+        prompt = await ctx.reply(f'Are you sure you want to start the server? Please type `{_confirm}` within 1 minute to confirm.')
+
+        try:
+            await self.bot.wait_for('message', check=confirm_check, timeout=60)
+        except asyncio.TimeoutError:
+            await ctx.reply('Did not receive a confirmation within 1 minute. Cancelling server start',
+                            mention_author=False)
+            return
+
+        finally:
+            try:
+                await prompt.delete()
+            except discord.HTTPException:
+                pass
 
         async with ctx.typing():
             oldcwd = os.getcwd()
