@@ -46,19 +46,23 @@ class Server(commands.Cog):
                 return False
 
             if ctx.author.id == OWNER_ID:
-                return msg.content.lower() in (_confirm, 'confirm')
+                return msg.content.lower() in (_confirm, 'confirm', 'cancel')
             else:
-                return msg.content.lower() == _confirm
+                return msg.content.lower() in (_confirm, 'cancel')
 
         prompt = await ctx.reply(f'Are you sure you want to start the server? Please type `{_confirm}` within 1 minute to confirm.')
 
         try:
-            await self.bot.wait_for('message', check=confirm_check, timeout=60)
+            answer = await self.bot.wait_for('message', check=confirm_check, timeout=60)
         except asyncio.TimeoutError:
             await ctx.reply('Did not receive a confirmation within 1 minute. Cancelling server start',
                             mention_author=False)
             return
-
+        else:
+            if answer.content.lower() == 'cancel':
+                await ctx.reply('Cancelling server start',
+                                mention_author=False)
+                return
         finally:
             try:
                 await prompt.delete()
