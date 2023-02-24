@@ -31,6 +31,11 @@ class Admin(commands.Cog):
                 status=discord.Status.dnd)
             await ctx.reply('Server status set to OFF')
 
+    @commands.command(name='shutdown')
+    @commands.is_owner()
+    async def shutdown_bot(self, ctx: commands.Context):
+        await ctx.message.add_reaction('\U0001f620')
+        await ctx.bot.close()
 
 async def setup(bot: Bot):
     await bot.add_cog(Admin(bot))
