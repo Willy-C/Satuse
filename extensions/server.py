@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import logging
 import asyncio
 from subprocess import Popen, PIPE, DETACHED_PROCESS, CREATE_NEW_PROCESS_GROUP
 from typing import TYPE_CHECKING
@@ -9,10 +10,13 @@ import psutil
 import discord
 from discord.ext import commands, tasks
 
-from config import SERVER_CWD, OWNER_ID
+from config import SERVER_DIR, OWNER_ID
 
 if TYPE_CHECKING:
     from main import Bot
+
+
+logging = logging.getLogger(__name__)
 
 
 class Server(commands.Cog):
@@ -22,6 +26,11 @@ class Server(commands.Cog):
 
     async def cog_unload(self):
         self.check_server_status.cancel()
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        if self.check_server_status.current_loop > 2:
+            self.check_server_status.restart()
 
     async def wait_then_online(self):
         await asyncio.sleep(60 * 3)
@@ -71,7 +80,7 @@ class Server(commands.Cog):
 
         async with ctx.typing():
             oldcwd = os.getcwd()
-            os.chdir(SERVER_CWD)
+            os.chdir(SERVER_DIR)
 
             CMD_ARGS = ['start.bat']
 
@@ -108,10 +117,12 @@ class Server(commands.Cog):
 
     @tasks.loop(minutes=15)
     async def check_server_status(self):
+        logging.info('Checking server status...')
         _status = self.check_server_running()
         if _status:
             if self.bot.server_status:
                 return
+            logging.info('Server is running, changing status...')
             self.bot.server_status = True
             self.bot.server_start_time = discord.utils.utcnow()
             await self.bot.change_presence(
@@ -120,6 +131,7 @@ class Server(commands.Cog):
         else:
             if not self.bot.server_status:
                 return
+            logging.info('Server is not running, changing status...')
             self.bot.server_status = False
             await self.bot.change_presence(
                 activity=discord.Activity(type=discord.ActivityType.listening, name="start"),
@@ -129,6 +141,7 @@ class Server(commands.Cog):
     async def sleep_before(self):
         await self.bot.wait_until_ready()
         await asyncio.sleep(5)
+        logging.info('Server status checker started')
 
 
 async def setup(bot: Bot):
