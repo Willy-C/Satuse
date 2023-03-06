@@ -40,6 +40,9 @@ class Bot(commands.Bot):
             await self.load_extension(ext)
             print(f'Loaded {ext}')
 
+    async def on_ready(self):
+        print(f'{self.user} Ready: {datetime.now()}')
+
     async def on_command_error(self, ctx, error):
         ignored = (commands.CommandNotFound, commands.NotOwner)  # Tuple of errors to ignore
         error = getattr(error, 'original', error)
