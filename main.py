@@ -84,4 +84,4 @@ class Bot(commands.Bot):
 
 bot = Bot()
 
-bot.run(BOT_TOKEN)
+bot.run(BOT_TOKEN, root_logger=True)
