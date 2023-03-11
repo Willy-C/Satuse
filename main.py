@@ -75,7 +75,7 @@ class Bot(commands.Bot):
         if message.author.id not in WHITELIST:
             return
 
-        if message.content in ('<@1078131779543765052>', '<@!1078131779543765052>'):
+        if message.content.startswith(('<@1078131779543765052>', '<@!1078131779543765052>')):
             await message.reply('To start the server: `uwu pls start`', mention_author=False)
             return
 
