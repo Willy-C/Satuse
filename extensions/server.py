@@ -22,16 +22,16 @@ logging = logging.getLogger(__name__)
 class Server(commands.Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
-        self.check_server_status.start()
+        self.server_checker_loop.start()
         self._checker_lock: asyncio.Lock = asyncio.Lock()
 
     async def cog_unload(self):
-        self.check_server_status.cancel()
+        self.server_checker_loop.cancel()
 
     @commands.Cog.listener()
     async def on_ready(self):
-        if self.check_server_status.current_loop > 1:
-            self.check_server_status.restart()
+        if self.server_checker_loop.current_loop > 1:
+            self.server_checker_loop.restart()
 
     async def wait_then_online(self):
         await asyncio.sleep(60 * 3)
@@ -43,11 +43,15 @@ class Server(commands.Cog):
     @commands.max_concurrency(1, wait=True)
     async def start_server(self, ctx: commands.Context):
         """Starts the server"""
+        async with ctx.typing():
+            await self.check_server_status()
+
         async with self._checker_lock:
             if ctx.author.id != OWNER_ID:
                 if 'uwu' not in ctx.prefix:
                     await ctx.reply('To start the server: `uwu pls start`', mention_author=False)
                     return
+
             if self.bot.server_status:
                 dt = self.bot.server_start_time
                 await ctx.reply(f'Server is already running! The server was last started at {discord.utils.format_dt(dt)} ({discord.utils.format_dt(dt, "R")})\n'
@@ -111,7 +115,7 @@ class Server(commands.Cog):
             self.bot.loop.create_task(self.wait_then_online())
 
     @staticmethod
-    def check_server_running():
+    def check_server_exe():
         try:
             for p in psutil.process_iter(['name']):
                 if p.info['name'] == 'java.exe':
@@ -121,11 +125,10 @@ class Server(commands.Cog):
         except psutil.AccessDenied:
             return False
 
-    @tasks.loop(minutes=15)
     async def check_server_status(self):
         async with self._checker_lock:
             logging.debug('Checking server status...')
-            _status = self.check_server_running()
+            _status = self.check_server_exe()
             if _status:
                 if self.bot.server_status:
                     return
@@ -144,7 +147,11 @@ class Server(commands.Cog):
                     activity=discord.Activity(type=discord.ActivityType.listening, name="start"),
                     status=discord.Status.dnd)
 
-    @check_server_status.before_loop
+    @tasks.loop(minutes=15)
+    async def server_checker_loop(self):
+        await self.check_server_status()
+
+    @server_checker_loop.before_loop
     async def sleep_before(self):
         async with self._checker_lock:
             await self.bot.wait_until_ready()
