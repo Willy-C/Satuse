@@ -87,6 +87,7 @@ class Server(commands.Cog):
                     pass
 
             async with ctx.typing():
+                logging.info(f'Starting server... | {ctx.author}')
                 oldcwd = os.getcwd()
                 os.chdir(SERVER_DIR)
 
@@ -108,17 +109,19 @@ class Server(commands.Cog):
             await ctx.reply(f'Server is starting now... Please allow a few minutes to fully load all mods.')
 
             await self.bot.set_online_status()
+            logging.info(f'Server successfully started')
 
     @staticmethod
     def check_server_exe():
-        try:
-            for p in psutil.process_iter(['name']):
-                if p.info['name'] == 'java.exe':
+        for p in psutil.process_iter(['name']):
+            try:
+                if p.name() == 'java.exe':
                     if r'Minecraft\FTB' in p.exe():
                         return True
-            return False
-        except psutil.AccessDenied:
-            return False
+            except psutil.AccessDenied:
+                continue
+        return False
+
 
     async def check_server_status(self):
         async with self._checker_lock:
