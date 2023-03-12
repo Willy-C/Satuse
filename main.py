@@ -81,6 +81,20 @@ class Bot(commands.Bot):
 
         await self.process_commands(message)
 
+    async def set_online_status(self):
+        """Server is online, set status to online"""
+        await self.change_presence(
+            activity=discord.Activity(type=discord.ActivityType.playing, name='OceanBlock v1.15.1'),
+            status=discord.Status.online
+        )
+
+    async def set_offline_status(self):
+        """Server is offline, set status to dnd"""
+        await self.change_presence(
+            activity=discord.Activity(type=discord.ActivityType.listening, name="start"),
+            status=discord.Status.dnd
+        )
+
 
 bot = Bot()
 

@@ -27,15 +27,11 @@ class Admin(commands.Cog):
         if status:
             self.bot.server_status = True
             self.bot.server_start_time = discord.utils.utcnow()
-            await self.bot.change_presence(
-                activity=discord.Activity(type=discord.ActivityType.playing, name='OceanBlock v1.15.1'),
-                status=discord.Status.online)
+            await self.bot.set_online_status()
             await ctx.reply('Server status set to ON')
         else:
             self.bot.server_status = False
-            await self.bot.change_presence(
-                activity=discord.Activity(type=discord.ActivityType.listening, name="start"),
-                status=discord.Status.dnd)
+            await self.bot.set_offline_status()
             await ctx.reply('Server status set to OFF')
 
     @commands.command(name='shutdown')

@@ -35,9 +35,7 @@ class Server(commands.Cog):
 
     async def wait_then_online(self):
         await asyncio.sleep(60 * 3)
-        await self.bot.change_presence(
-            activity=discord.Activity(type=discord.ActivityType.playing, name='OceanBlock v1.15.1'),
-            status=discord.Status.online)
+        await self.bot.set_online_status()
 
     @commands.command(name='start')
     @commands.max_concurrency(1, wait=True)
@@ -108,11 +106,8 @@ class Server(commands.Cog):
                 self.bot.server_start_time = discord.utils.utcnow()
 
             await ctx.reply(f'Server is starting now... Please allow a few minutes to fully load all mods.')
-            await self.bot.change_presence(
-                activity=discord.Activity(type=discord.ActivityType.playing, name='OceanBlock v1.15.1'),
-                status=discord.Status.idle)
 
-            self.bot.loop.create_task(self.wait_then_online())
+            await self.bot.set_online_status()
 
     @staticmethod
     def check_server_exe():
@@ -135,17 +130,13 @@ class Server(commands.Cog):
                 logging.info('Server is running, changing status...')
                 self.bot.server_status = True
                 self.bot.server_start_time = discord.utils.utcnow()
-                await self.bot.change_presence(
-                    activity=discord.Activity(type=discord.ActivityType.playing, name='OceanBlock v1.15.1'),
-                    status=discord.Status.online)
+                await self.bot.set_online_status()
             else:
                 if not self.bot.server_status:
                     return
                 logging.info('Server is not running, changing status...')
                 self.bot.server_status = False
-                await self.bot.change_presence(
-                    activity=discord.Activity(type=discord.ActivityType.listening, name="start"),
-                    status=discord.Status.dnd)
+                await self.bot.set_offline_status()
 
     @tasks.loop(minutes=15)
     async def server_checker_loop(self):
