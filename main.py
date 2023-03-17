@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 import discord
@@ -49,6 +49,11 @@ class Bot(commands.Bot):
         error = getattr(error, 'original', error)
 
         if isinstance(error, ignored):
+            return
+
+        if isinstance(error, commands.CommandOnCooldown):
+            dt = discord.utils.utcnow() + timedelta(seconds=error.retry_after)
+            await ctx.send(f'This command is on cooldown. Try again: {discord.utils.format_dt(dt, "R")}')
             return
 
         # Unhandled error, so just return the traceback
