@@ -162,12 +162,14 @@ class Server(commands.Cog):
 
     @commands.command()
     async def ip(self, ctx: Context):
+        """Get the server IP"""
         try:
             await ctx.author.send(f'The server IP is: `{SERVER_IP}`')
         except discord.Forbidden:
             await ctx.reply('I cannot DM you. Please enable DMs from server members to receive the server IP.')
         else:
-            await ctx.reply('I have sent you the server IP via DM.')
+            if ctx.guild:
+                await ctx.reply('I have sent you the server IP via DM.')
             await ctx.tick(True)
 
     @commands.command(name='uptime')
@@ -183,7 +185,7 @@ class Server(commands.Cog):
     @commands.command(name='list')
     @commands.max_concurrency(1, wait=True)
     async def list_players(self, ctx: Context):
-        """List players online"""
+        """List online players"""
         if not self.bot.server_status:
             await ctx.reply('The server is currently offline')
             return
@@ -234,6 +236,8 @@ class Server(commands.Cog):
         logging.info(f'Stopping server... | {ctx.author}')
         await ctx.reply('Shutting down server...', mention_author=False)
         await ctx.tick(True)
+        async with self._checker_lock:
+            await asyncio.sleep(10)
         await self.check_server_status()
 
 
