@@ -7,6 +7,7 @@ from typing import Optional
 import discord
 from discord.ext import commands
 
+from utils.context import Context
 from config import BOT_TOKEN, WHITELIST, PREFIX
 
 
@@ -80,6 +81,9 @@ class Bot(commands.Bot):
             return
 
         await self.process_commands(message)
+
+    async def get_context(self, message, *, cls=Context):
+        return await super().get_context(message, cls=cls)
 
     async def set_online_status(self):
         """Server is online, set status to online"""
