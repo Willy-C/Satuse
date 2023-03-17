@@ -154,7 +154,7 @@ class Server(commands.Cog):
             # await asyncio.sleep(5)
             logging.info('Server status checker started')
 
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.is_owner()
     async def update(self, ctx: Context):
         await self.check_server_status()
@@ -199,13 +199,13 @@ class Server(commands.Cog):
             if current_online['count'] == '0':
                 await ctx.reply('There are currently no players online.', mention_author=False)
             else:
-                igns = ', '.join(current_online['players'])
                 await ctx.reply(f'There are currently {current_online["count"]} players online:\n'
-                                f'{igns}', mention_author=False)
+                                f'{current_online["players"]}', mention_author=False)
             await ctx.tick(True)
 
     @commands.command(name='stop')
     @commands.dynamic_cooldown(cooldown_with_bypass, type=commands.BucketType.user)
+    @commands.max_concurrency(1, wait=True)
     async def stop_server(self, ctx: Context):
         """Stop the server"""
         if not self.bot.server_status:
@@ -231,8 +231,10 @@ class Server(commands.Cog):
 
             await rcon.send('stop')
 
-        await ctx.reply('Shutting down server', mention_author=False)
+        logging.info(f'Stopping server... | {ctx.author}')
+        await ctx.reply('Shutting down server...', mention_author=False)
         await ctx.tick(True)
+        await self.check_server_status()
 
 
 async def setup(bot: Bot):
