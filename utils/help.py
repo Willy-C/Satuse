@@ -16,3 +16,5 @@ class MinimalHelp(commands.MinimalHelpCommand):
             else:
                 return await self.send_cog_help(cog)
 
+    def get_opening_note(self) -> str:
+        return ''
