@@ -8,6 +8,7 @@ import discord
 from discord.ext import commands
 
 from utils.context import Context
+from utils.help import MinimalHelp
 from config import BOT_TOKEN, WHITELIST, PREFIX
 
 
@@ -23,7 +24,7 @@ class Bot(commands.Bot):
                          intents=intents,
                          description='Hello, I am a bot that helps start the server',
                          allowed_mentions=discord.AllowedMentions.none(),
-                         help_command=commands.MinimalHelpCommand(),
+                         help_command=MinimalHelp(),
                          status=discord.Status.dnd,
                          activity=discord.Activity(type=discord.ActivityType.listening, name="start")
                          )
@@ -82,7 +83,9 @@ class Bot(commands.Bot):
             return
 
         if message.content.startswith(('<@1078131779543765052>', '<@!1078131779543765052>')):
-            await message.reply('To start the server: `uwu pls start`', mention_author=False)
+            await message.reply('To start the server: `uwu pls start`\n'
+                                'For list of commands: `uwu pls help`',
+                                mention_author=False)
             return
 
         await self.process_commands(message)
