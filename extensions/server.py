@@ -10,10 +10,13 @@ import psutil
 import discord
 from discord.ext import commands, tasks
 
-from config import SERVER_DIR, OWNER_ID
+from utils.mcrcon import RCONClient
+from utils.common import parse_list_resp, cooldown_with_bypass
+from config import SERVER_DIR, OWNER_ID, SERVER_IP, RCON_PORT, RCON_PASS
 
 if TYPE_CHECKING:
     from main import Bot
+    from utils.context import Context
 
 
 logging = logging.getLogger(__name__)
@@ -39,7 +42,7 @@ class Server(commands.Cog):
 
     @commands.command(name='start')
     @commands.max_concurrency(1, wait=True)
-    async def start_server(self, ctx: commands.Context):
+    async def start_server(self, ctx: Context):
         """Starts the server"""
         async with ctx.typing():
             await self.check_server_status()
@@ -122,7 +125,6 @@ class Server(commands.Cog):
                 continue
         return False
 
-
     async def check_server_status(self):
         async with self._checker_lock:
             logging.debug('Checking server status...')
@@ -149,14 +151,88 @@ class Server(commands.Cog):
     async def sleep_before(self):
         async with self._checker_lock:
             await self.bot.wait_until_ready()
-            await asyncio.sleep(5)
+            # await asyncio.sleep(5)
             logging.info('Server status checker started')
 
     @commands.command()
     @commands.is_owner()
-    async def update(self, ctx: commands.Context):
+    async def update(self, ctx: Context):
         await self.check_server_status()
-        await ctx.message.add_reaction('<:greenTick:602811779835494410>')
+        await ctx.tick(True)
+
+    @commands.command()
+    async def ip(self, ctx: Context):
+        try:
+            await ctx.author.send(f'The server IP is: `{SERVER_IP}`')
+        except discord.Forbidden:
+            await ctx.reply('I cannot DM you. Please enable DMs from server members to receive the server IP.')
+        else:
+            await ctx.reply('I have sent you the server IP via DM.')
+            await ctx.tick(True)
+
+    @commands.command(name='uptime')
+    async def server_uptime(self, ctx: Context):
+        """Check server uptime"""
+        if not self.bot.server_status:
+            await ctx.reply('The server is currently offline')
+            return
+
+        dt = self.bot.server_start_time
+        await ctx.reply(f'The server was last started at {discord.utils.format_dt(dt)} ({discord.utils.format_dt(dt, "R")})')
+
+    @commands.command(name='list')
+    @commands.max_concurrency(1, wait=True)
+    async def list_players(self, ctx: Context):
+        """List players online"""
+        if not self.bot.server_status:
+            await ctx.reply('The server is currently offline')
+            return
+
+        async with ctx.typing(), RCONClient('localhost', RCON_PORT, RCON_PASS) as rcon:
+            resp = await rcon.send('list')
+            current_online = parse_list_resp(resp)
+            if not current_online:
+                await ctx.reply('Unable to get player list. Please try again later.', mention_author=False)
+                await ctx.tick(False)
+                return
+
+            if current_online['count'] == '0':
+                await ctx.reply('There are currently no players online.', mention_author=False)
+            else:
+                igns = ', '.join(current_online['players'])
+                await ctx.reply(f'There are currently {current_online["count"]} players online:\n'
+                                f'{igns}', mention_author=False)
+            await ctx.tick(True)
+
+    @commands.command(name='stop')
+    @commands.dynamic_cooldown(cooldown_with_bypass, type=commands.BucketType.user)
+    async def stop_server(self, ctx: Context):
+        """Stop the server"""
+        if not self.bot.server_status:
+            await ctx.reply('The server is currently offline')
+            return
+
+        async with ctx.typing(), RCONClient('localhost', RCON_PORT, RCON_PASS) as rcon:
+            list_resp = await rcon.send('list')
+            current_online = parse_list_resp(list_resp)
+            if not current_online:
+                await ctx.reply('Unable to get player list. Please try again later.', mention_author=False)
+                return
+
+            if int(current_online['count']) > 0:
+                await ctx.reply(f'There are currently {current_online["count"]} players online.\n'
+                                f'Please wait for them to leave before stopping the server.', mention_author=False)
+                await ctx.tick(False)
+                return
+
+            if not await ctx.confirm_prompt('Shutdown server?'):
+                await ctx.tick(False)
+                return
+
+            await rcon.send('stop')
+
+        await ctx.reply('Shutting down server', mention_author=False)
+        await ctx.tick(True)
 
 
 async def setup(bot: Bot):
