@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import re
+from typing import Optional, TYPE_CHECKING
+
 import discord
 from discord.ext import commands
-
-from typing import Optional, TYPE_CHECKING
 
 from config import OWNER_ID
 
