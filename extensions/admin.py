@@ -80,15 +80,15 @@ class Admin(commands.Cog):
                 logging.error(f'Failed to fetch user {user_id} | {e}')
                 failed.append(user_id)
             else:
-                await asyncio.sleep(60)
+                await asyncio.sleep(30)
                 try:
                     await user.send(message, **kwargs)
                 except discord.HTTPException as e:
                     logging.error(f'Failed to send broadcast to {user} ({user_id}) | {e}')
-                    failed.append(user)
+                    failed.append(user.mention)
                 else:
                     logging.info(f'Sent broadcast to {user} ({user_id})')
-                    success.append(user)
+                    success.append(user.mention)
         return success, failed, not_found
 
 
@@ -99,9 +99,9 @@ class Admin(commands.Cog):
             return
         await ctx.send('Sending broadcast...')
         success, failed, not_found = await self.do_broadcast(message)
-        await ctx.reply(f'Successfully sent to {len(success)} users: {" ".join(map(str, success))}\n'
-                        f'Failed to send to {len(failed)} users: {" ".join(map(str, failed))}\n'
-                        f'Not found {len(not_found)} users: {" ".join(map(str, not_found))}\n'
+        await ctx.reply(f'Successfully sent to {len(success)} users: {", ".join(map(str, success))}\n'
+                        f'Failed to send to {len(failed)} users: {", ".join(map(str, failed))}\n'
+                        f'Not found {len(not_found)} users: {", ".join(map(str, not_found))}\n'
                         f'Total: {len(success) + len(failed) + len(not_found)} users',
                         mention_author=False)
         await ctx.tick(True)
@@ -113,9 +113,9 @@ class Admin(commands.Cog):
             return
         await ctx.send('Sending broadcast...')
         success, failed, not_found = await self.do_broadcast(message, silent=True)
-        await ctx.reply(f'Successfully sent to {len(success)} users: {" ".join(map(str, success))}\n'
-                        f'Failed to send to {len(failed)} users: {" ".join(map(str, failed))}\n'
-                        f'Not found {len(not_found)} users: {" ".join(map(str, not_found))}\n'
+        await ctx.reply(f'Successfully sent to {len(success)} users: {", ".join(map(str, success))}\n'
+                        f'Failed to send to {len(failed)} users: {", ".join(map(str, failed))}\n'
+                        f'Not found {len(not_found)} users: {", ".join(map(str, not_found))}\n'
                         f'Total: {len(success) + len(failed) + len(not_found)} users',
                         mention_author=False)
         await ctx.tick(True)
