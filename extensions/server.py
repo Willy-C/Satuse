@@ -201,8 +201,12 @@ class Server(commands.Cog):
             if current_online['count'] == '0':
                 await ctx.reply('There are currently no players online.', mention_author=False)
             else:
-                await ctx.reply(f'There are currently {current_online["count"]} players online:\n'
-                                f'{current_online["players"]}', mention_author=False)
+                if current_online['count'] == '1':
+                    await ctx.reply(f'There is currently {current_online["count"]} player online:\n'
+                                    f'{current_online["players"]}', mention_author=False)
+                else:
+                    await ctx.reply(f'There are currently {current_online["count"]} players online:\n'
+                                    f'{current_online["players"]}', mention_author=False)
             await ctx.tick(True)
 
     @commands.command(name='stop')
@@ -222,8 +226,12 @@ class Server(commands.Cog):
                 return
 
             if int(current_online['count']) > 0:
-                await ctx.reply(f'There are currently {current_online["count"]} players online.\n'
-                                f'Please wait for them to leave before stopping the server.', mention_author=False)
+                if current_online['count'] == '1':
+                    await ctx.reply(f'There is currently {current_online["count"]} player online.\n'
+                                    f'Please wait for them to leave before stopping the server.', mention_author=False)
+                else:
+                    await ctx.reply(f'There are currently {current_online["count"]} players online.\n'
+                                    f'Please wait for them to leave before stopping the server.', mention_author=False)
                 await ctx.tick(False)
                 return
 
