@@ -4,10 +4,11 @@ import logging
 import pathlib
 from typing import TYPE_CHECKING
 
+import aiohttp
 import discord
 from discord.ext import commands
 
-from config import SERVER_DIR, WHITELIST
+from config import SERVER_DIR, WHITELIST, EXTERNAL_IP
 
 if TYPE_CHECKING:
     from main import Bot
@@ -91,7 +92,6 @@ class Admin(commands.Cog):
                     success.append(user.mention)
         return success, failed, not_found
 
-
     @commands.command()
     async def broadcast(self, ctx: Context, *, message: str):
         """Broadcast a message to all users"""
@@ -119,6 +119,33 @@ class Admin(commands.Cog):
                         f'Total: {len(success) + len(failed) + len(not_found)} users',
                         mention_author=False)
         await ctx.tick(True)
+
+    @commands.command(name='checkip')
+    async def check_ip(self, ctx: Context):
+        """Check if IP of server is up to date"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get('https://v4.ident.me/') as resp:
+                    current_ip = await resp.text()
+        except Exception as e:
+            await ctx.reply(f'Unable to fetch IP: {e}', mention_author=False)
+            await ctx.tick(False)
+            return
+
+        msg = f'Saved IP: `{EXTERNAL_IP}`\n' \
+              f'Fetched IP: `{current_ip}`\n'
+
+        if EXTERNAL_IP == current_ip:
+            msg += f'{await ctx.tick(True, reaction=False)} IP is up to date'
+        else:
+            msg += f'{await ctx.tick(False, reaction=False)} IP has changed!'
+        try:
+            await ctx.author.send(msg)
+        except discord.HTTPException:
+            await ctx.reply('Unable to send DM', mention_author=False)
+            await ctx.tick(False)
+        else:
+            await ctx.tick(True)
 
 
 async def setup(bot: Bot):
