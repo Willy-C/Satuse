@@ -119,7 +119,7 @@ class Server(commands.Cog):
         for p in psutil.process_iter(['name']):
             try:
                 if p.name() == 'java.exe':
-                    if r'Minecraft\FTB' in p.exe():
+                    if r'Desktop\Minecraft' in p.cwd() or r'Desktop\Minecraft' in p.exe():
                         return True
             except psutil.AccessDenied:
                 continue
