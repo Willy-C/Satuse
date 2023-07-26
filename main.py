@@ -9,7 +9,7 @@ from discord.ext import commands
 
 from utils.context import Context
 from utils.help import MinimalHelp
-from config import BOT_TOKEN, WHITELIST, PREFIX
+from config import BOT_TOKEN, WHITELIST, PREFIX, MODPACK_NAME
 
 
 class Bot(commands.Bot):
@@ -96,7 +96,7 @@ class Bot(commands.Bot):
     async def set_online_status(self):
         """Server is online, set status to online"""
         await self.change_presence(
-            activity=discord.Activity(type=discord.ActivityType.playing, name='OceanBlock v1.15.1'),
+            activity=discord.Activity(type=discord.ActivityType.playing, name=MODPACK_NAME),
             status=discord.Status.online
         )
 
