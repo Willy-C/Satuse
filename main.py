@@ -56,6 +56,9 @@ class Bot(commands.Bot):
             dt = discord.utils.utcnow() + timedelta(seconds=error.retry_after)
             await ctx.send(f'This command is on cooldown. Try again: {discord.utils.format_dt(dt, "R")}')
             return
+        elif isinstance(error, commands.DisabledCommand):
+            await ctx.send('This command is disabled.')
+            return
 
         # Unhandled error, so just return the traceback
         tb = traceback.format_exception(type(error), error, error.__traceback__)
